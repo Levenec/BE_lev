@@ -6,7 +6,7 @@ ini_set('display_startup_errors', 'On');
 restore_error_handler ();
 
 echo "hi";
-echo "hi";
+// echo "hi";
 
 
 
