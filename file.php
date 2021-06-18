@@ -13,6 +13,10 @@ $password=$_POST['password']; //это вы получите из $_POST, нап
 $file=file("login.txt"); //массив $file содержит элементы, каждый из которых соответствует определенному пользователю
 
 
+
+
+$date =date('H:i',strtotime(' + 180 min'));
+
 for ($i=0; $i<count($file); $i++){
     $users[$i] = explode(" ", $file[$i]); // этот массив многомерный. каждый его элемент является подмассивом, содержащим информацию об определенном пользователе
 
@@ -21,52 +25,54 @@ for ($i=0; $i<count($file); $i++){
 
 foreach ($users as $user => $k) {
 
-    if ($k[1]  == $password && $k[0]  == $login){
+    if ($k[1]  == $password && $k[0]  == $login){ //проверяем логин и паролдь
         echo "<p>Пароль  соответствует пользователю " . $k[0] . "<br>" ;
 
 
         $name = $k[0];
 
-       if (!file_exists($name .".txt")){
+
+        if (file_exists($k[0].'_time_denied.txt')){ // проверяем есть ли файл времени блокировки
+           $time_denied = $k[0].'_time_denied.txt';
+
+           if ( strpos($time_denied, $name) !== false){ // проверяем файл блокировки для юзера
+               $get_time_block = file_get_contents($k[0].'_time_denied.txt');
+
+
+               if ($date > $get_time_block){ // прошло время блокировки или нет
+                   echo "Блокировка прошла";
+               }else echo  " Вы еще заблокированы"; break;
+           }
+        }
+
+       if (!file_exists($name .".txt")){ //если нет файла удачной авторизации - создаем
            $file_user = fopen($k[0].".txt","w");
            echo "создан лог файла";
 //           file_put_contents($name.".txt","1");
 
 
-       }elseif  (file_exists($name .".txt")){
+       }elseif  (file_exists($name .".txt")){ // если есть файл авторизации записываем успешные
 
 
            $data_file = file_get_contents ($name .".txt");
            $string = preg_replace('/[^0-9]/i', ' ', $data_file);
-
            $string ++;
           $data_write = "Пользователь " . $name ." имеет " . $string . " успешных авторизаций";
-
-
         file_put_contents($name.".txt",$data_write);
            echo $data_write;
 
        }
-
-
-
     }
 
-    if ( $k[1]  != $password && $k[0]  == $login){ //неправильный пароль
+    if ( $k[1]  != $password && $k[0]  == $login){ //если неправильный пароль
 
-
-
-        if (!file_exists($k[0]."_denied.txt")){
+        if (!file_exists($k[0]."_denied.txt")){  // //если нет файла блокировки - создаем
             $file_user = fopen($k[0]."_denied.txt","w");
             echo "создан лог файла блокировки";
             file_put_contents($k[0]."_denied.txt",'1');
 
-
-
-
         }
-
-        elseif ( file_exists($k[0]."_denied.txt")){
+        elseif ( file_exists($k[0]."_denied.txt")){ // если есть файл блокировки записываем кол-во неправильного входа
             $denied_file  = file_get_contents($k[0]."_denied.txt");
             $denied = preg_replace('/[^0-9]/i', ' ', $denied_file); //количестов не правильного ввода
             $denied ++;
@@ -75,13 +81,11 @@ foreach ($users as $user => $k) {
             file_put_contents($k[0]."_denied.txt",$denied);
             echo ' У вас осталось ' . $attempt . ' попытки до блокировки ' ."<br>";
 
-
-
-            if ($attempt <= 0 ){
-
-                $unblock_time = date('H:i',strtotime(' + 200 min'));
-
-                echo "Вас заблокировано, Вы можете попробовать еще раз через 20 мин в " . $unblock_time;
+            if ($attempt <= 0 ){ // считаем кол-во не правильно входа и фиксируем время
+                $file_user = fopen($k[0]."_time_denied.txt","w");
+                $unblock_time = date('H:i',strtotime(' + 190 min'));
+                file_put_contents($k[0].'_time_denied.txt' , $unblock_time);
+               echo "Вас заблокировано, Вы можете попробовать еще раз через 10 мин в " . $unblock_time;
             }
 
         }
