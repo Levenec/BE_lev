@@ -12,7 +12,7 @@ for ($i=0; $i<count($data_user); $i++){
 //    echo strlen($data_user[$i][2]);
 
 
-    if (strlen($data_user[$i][2]) <= 8){
+    if (strlen($data_user[$i][2]) < 8){
         $data_low_pass[] = $data_user[$i];
     }
 }
